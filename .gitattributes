@@ -1,0 +1,18 @@
+# Auto-detect text files and normalize line endings to LF on checkin.
+* text=auto eol=lf
+
+# Ensure userscript files always use LF (required by Tampermonkey/Greasemonkey).
+*.user.js text eol=lf
+*.js text eol=lf
+
+# Documentation
+*.md text eol=lf
+
+# License
+LICENSE text eol=lf
+
+# Archives & binaries are left untouched.
+*.zip binary
+*.png binary
+*.jpg binary
+*.pdf binary
