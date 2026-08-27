@@ -126,6 +126,27 @@
     return STORE_RE.test(name) ? { compression: 'STORE' } : { compression: 'DEFLATE' };
   }
 
+  function getFilenameFromResponse(response, fallbackName) {
+    const disposition = response.headers.get('content-disposition');
+    if (disposition) {
+      const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+      if (utf8Match?.[1]) return decodeURIComponent(utf8Match[1].trim().replace(/['"]/g, ''));
+      const stdMatch = disposition.match(/filename="?([^";]+)"?/i);
+      if (stdMatch?.[1]) return stdMatch[1].trim();
+    }
+    try {
+      const parsedUrl = new URL(response.url);
+      const paramDisp = parsedUrl.searchParams.get('response-content-disposition');
+      if (paramDisp) {
+        const utf8Param = paramDisp.match(/filename\*=UTF-8''([^;]+)/i);
+        if (utf8Param?.[1]) return decodeURIComponent(utf8Param[1].trim().replace(/['"]/g, ''));
+        const stdParam = paramDisp.match(/filename="?([^";]+)"?/i);
+        if (stdParam?.[1]) return stdParam[1].trim();
+      }
+    } catch (e) {}
+    return fallbackName;
+  }
+
   async function runCourseExport() {
     const btn = document.getElementById('bb-exporter-btn');
     btn.disabled = true;
@@ -251,6 +272,7 @@
                       continue;
                     }
                     const blob = await fileRes.blob();
+                    fileName = getFilenameFromResponse(fileRes, fileName);
                     if (!fileName.includes('.')) {
                       const ct = fileRes.headers.get('content-type') || "";
                       if (ct.includes('pdf')) fileName += '.pdf';
